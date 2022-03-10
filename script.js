@@ -1,42 +1,55 @@
-fetch('https://api.github.com/users/kuzmichioo')
-.then(res => res.json())
-.then(json => console.log(json))
-.catch(err => console.log(err));
+let preloader = document.getElementById('preloader');
 
-let url = window.location.toString();
+window.setTimeout(function () {
+    // document.body.classList.add('block');
+    preloader.classList.add('none');
+    let body = document.body;
+    let url = 'https://api.github.com/users/kuzmichioo';
+    let date = new Date();
+    let getDate = new Promise((resolve, reject) => {
+    setTimeout(() => date ? resolve(date) : reject("Error date!"), 1500)
+    });
+    let getUrl = new Promise((resolve, reject) => {
+    setTimeout(() => url ? resolve(url) : reject("Error URL!"), 1500)
+    });
 
-function checkUsername(url) {
-  let urlSplit = url.split('=');
-  let name = urlSplit[1];
-  if (name == undefined) {
-    name = 'kuzmichioo';
-  }
-  else {
-    return name;
-  }
-}
-console.log(checkUsername(url));
+    Promise.all([getUrl, getDate])
+        .then(([url, date]) => fetch(url))
+        .then(res => res.json())
+        .then(json => {
+            let avatar = new Image();
+            avatar.src = json.avatar_url;
+            body.append(avatar);
+            avatar.classList.add('block');
 
-fetch('https://api.github.com/users/${checkUsername(url))')
-  .then((res) => res.json())
-  .then((json) => {
-    let nameLink = document.createElement("fc");
-    nameLink.id = "link";
-    nameLink.href = json.html_url;
-    nameLink.title = "Link";
-    nameLink.innerHTML = json.name;
-    document.body.appenChild(nameLink);
+            let br = document.createElement('br');
+            body.append(br);
+            br.classList.add('block');
 
-    if (!json.name) {
-      nameLink.innerHTML = "kuzmichioo";
-    }
+            let name = document.createElement('a');
+            if (json.name != null) {
+                name.innerHTML = json.name;
+            } else {
+                name.innerHTML = 'Пользователь не найден';
+            }
+            body.append(name);
+            // name.addEventListener("click", () => window.location = 'https://github.com/?username=${getNameFromUrl(url)}');
+            name.href = json.html_url;
+            name.title = json.login;
+            name.innerText = json.login;
+            name.classList.add('block');
 
-    let divBio = document.createElement("div");
-    divBio.id = "bio";
-    if (json.bio) {
-      divBio.innerHTML = json.bio;
-    }
-    else {
-      divBio.innerHTML = "ho ho ho"
-    }
-  }
+            let bio = document.createElement('h4');
+            if (json.bio != null) {
+                bio.innerHTML = json.bio;
+            } else {
+                bio.innerHTML = 'Пользователь не найден';
+            }
+            body.append(bio);
+            bio.classList.add('block');
+
+            body.append(date);
+
+        })
+        .catch(err => alert('Пользователь не найден'));
+}, 3000);
